@@ -1,0 +1,71 @@
+<html>
+  <body>
+    <div id="curve_chart" style="width: 100%; height: 500px"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
+    <script type="text/javascript">
+      google.charts.load("current", { packages: ["corechart"] });
+      google.charts.setOnLoadCallback(drawChart);
+
+      function drawChart() {
+        var dataTable = google.visualization.arrayToDataTable([
+          ["Year", "PrecioBTC"],
+          ["2004", 1000],
+          ["2005", 1170],
+          ["2006", 660],
+          ["2007", 1030],
+        ]);
+
+        var options = {
+          title: "Precio del Bitcoin en USD por año segun un rand",
+          curveType: "function",
+          legend: { position: "bottom" },
+        };
+
+        var chart = new google.visualization.LineChart(
+          document.getElementById("curve_chart")
+        );
+
+        chart.draw(dataTable, options);
+
+        let year = 2008;
+
+        Pusher.logToConsole = true;
+        const pusher = new Pusher(
+          "11219067ad682b8ac42e", // Replace with 'key' from dashboard
+          {
+            cluster: "eu", // Replace with 'cluster' from dashboard
+            forceTLS: true,
+          }
+        );
+
+        var channel = pusher.subscribe("price-btcusd");
+
+        channel.bind("new-price", (data) => {
+          const row = [String(year++), data.value];
+          dataTable.addRow(row);
+          chart.draw(dataTable, options);
+        });
+      }
+      $(document).ready(function () {
+        $("form").on("submit", function (event) {
+          event.preventDefault(); // Evita la redirec del formulario
+
+          $.ajax({
+            url: "server.php",
+            type: "post",
+            success: function (response) {
+              
+              console.log("El script PHP se ha ejecutado correctamente.");
+            },
+          });
+        });
+      });
+    </script>
+
+    <form action="server.php" method="post">
+      <input type="submit" value="Ejecutar server.php" />
+    </form>
+  </body>
+</html>
